@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+    concurrency:
+      group: ${{ github.head_ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v3
       - id: set-matrix
@@ -40,6 +43,9 @@ jobs:
       image: ${{ matrix.container }}
       options: --gpus all --rm -v /data/scratch/cifar-10:/data/scratch/cifar-10
     timeout-minutes: 120
+    concurrency:
+      group: ${{ github.head_ref }}
+      cancel-in-progress: false
     steps:
       - name: Install dependencies
         run: |
@@ -60,7 +66,7 @@ jobs:
           ssh-key: ${{ secrets.SSH_KEY_FOR_CI }}
       - name: Download cub for CUDA 10.2
         run: |
-          CUDA_VERSION=$(cat $CUDA_HOME/version.txt | grep "CUDA Version" | awk '{print $NF}' | cut -d. -f1,2)
+          CUDA_VERSION=$(nvcc -V | awk -F ',| ' '/release/{print $6}')
 
           # check if it is CUDA 10.2
           # download cub
